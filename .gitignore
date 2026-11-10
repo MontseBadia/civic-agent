@@ -1,6 +1,7 @@
 # private
 CLAUDE.md
 .env
+local/
 
 # python
 .venv/
