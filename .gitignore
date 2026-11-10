@@ -1,0 +1,14 @@
+# private
+CLAUDE.md
+.env
+
+# python
+.venv/
+__pycache__/
+*.pyc
+
+# run outputs
+runs/
+
+# raw download
+data/raw/
