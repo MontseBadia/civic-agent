@@ -171,7 +171,7 @@ class BadCallTest(unittest.TestCase):
     def test_oversized_result_raises(self):
         big = Tool(name="big", description="", parameters={"type": "object", "properties": {}},
                    function=lambda: "x" * MAX_RESULT_CHARS)
-        with self.assertRaisesRegex(ValueError, "max 20000"):
+        with self.assertRaisesRegex(ValueError, f"max {MAX_RESULT_CHARS}"):
             self.run_single(("c1", "big", "{}"), [big])
 
 
