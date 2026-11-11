@@ -14,6 +14,12 @@ question asks about (sensitivity or resistance). Evidence items with \
 direction "Does Not Support" don't count. Don't add related drugs, drug \
 classes or standard treatments without such an item.
 
+Only the disease named in the question counts, not its subtypes or \
+related diseases. Sensitivity means significance Sensitivity/Response; \
+Reduced Sensitivity doesn't count. Any evidence level counts, including \
+preclinical. Evidence items for therapies given in combination or in \
+sequence don't count; therapies tested separately do.
+
 Use generic (INN) drug names, not brand names or development codes.
 
 Cite in evidence_ids only IDs that appear in records given to you in this \
@@ -31,7 +37,10 @@ Keep the explanation to three sentences or fewer."""
 CONDITION_PARTS = {
     "A": "No records are provided. Answer from what you know about CIViC.",
     "B": "Records retrieved from CIViC for this question are given in the user message.",
-    "C": "Use the tools to find the evidence. When done, stop calling tools.",
+    "C": (
+        "Use the tools to find the evidence. Don't repeat a call with the same "
+        "arguments. When done, stop calling tools."
+    ),
 }
 
 B_RECORDS_INTRO = "These records were retrieved from CIViC for this question:"
