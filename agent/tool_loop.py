@@ -1,5 +1,6 @@
 """Hand-written tool loop for condition C, then one JSON-mode call for the answer."""
 
+import hashlib
 import json
 import time
 from dataclasses import dataclass
@@ -10,7 +11,8 @@ from agent.llm import GenerationSettings, LLMClient, LLMResponse, ToolCall
 from agent.prompts import C_FINAL_INSTRUCTION
 
 MAX_TOOL_CALLS = 8
-MAX_RESULT_CHARS = 20_000
+# Bug guard above get_evidence's 35,000 budget, not a context budget.
+MAX_RESULT_CHARS = 40_000
 
 _JSON_TYPES = {"string": str, "integer": int, "number": (int, float), "boolean": bool}
 
@@ -88,6 +90,12 @@ class LoopResult:
     trace: tuple[ModelStep | ToolStep, ...]
     messages: tuple[dict, ...]
     limit_reached: bool
+
+
+def tools_hash(tools: list[Tool]) -> str:
+    """Hash of exactly what the model is sent about the tools. Logged next to prompt_hash."""
+    payload = json.dumps([t.to_api() for t in tools], sort_keys=True)
+    return hashlib.sha256(payload.encode()).hexdigest()[:12]
 
 
 def validate_arguments(arguments: Any, schema: dict) -> None:
