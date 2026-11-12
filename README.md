@@ -62,7 +62,15 @@ Run one condition over one or more question files (server up):
 python -m evaluation.run --condition A --questions data/questions/dev.jsonl data/questions/hand_dev.jsonl --config configs/greedy.json --label dev
 ```
 
-Writes runs/<time>_dev_B.jsonl. The config holds every setting that changes results.
+Writes runs/<time>_dev_A.jsonl. The config holds every setting that changes results.
+
+Score one or more runs (one log per condition):
+
+```
+python -m evaluation.score --questions data/questions/dev.jsonl data/questions/hand_dev.jsonl --runs runs/<A>.jsonl runs/<B>.jsonl runs/<C>.jsonl --snapshot data/raw/01-Nov-2026 --out results/dev
+```
+
+Writes per_question.jsonl and summary.json to results/dev/ and prints the report.
 
 Tests:
 
