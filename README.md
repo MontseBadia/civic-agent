@@ -56,10 +56,10 @@ Templated questions and reference answers (dev and test):
 python -m evaluation.generate --snapshot data/raw/01-Nov-2026 --seed 7 --out data/questions
 ```
 
-Run one condition over a question file (server up):
+Run one condition over one or more question files (server up):
 
 ```
-python -m evaluation.run --condition B --questions <file.jsonl> --config configs/greedy.json --label dev
+python -m evaluation.run --condition A --questions data/questions/dev.jsonl data/questions/hand_dev.jsonl --config configs/greedy.json --label dev
 ```
 
 Writes runs/<time>_dev_B.jsonl. The config holds every setting that changes results.

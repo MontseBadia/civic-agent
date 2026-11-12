@@ -1,6 +1,6 @@
 """Run one condition over a question file and write a run log.
 
-python -m evaluation.run --condition B --questions <file.jsonl> --config configs/greedy.json --label dev
+python -m evaluation.run --condition B --questions <file.jsonl> [<file.jsonl> ...] --config configs/greedy.json --label dev
 """
 
 import argparse
@@ -91,6 +91,18 @@ def load_questions(path: Path) -> list[Question]:
     return questions
 
 
+def load_question_files(paths: list[Path]) -> list[Question]:
+    """Several files (templated + hand-made) in one run; IDs must be unique across them."""
+    questions, seen = [], {}
+    for path in paths:
+        for q in load_questions(path):
+            if q.id in seen:
+                raise ValueError(f"duplicate id {q.id!r} in {seen[q.id]} and {path}")
+            seen[q.id] = path
+            questions.append(q)
+    return questions
+
+
 def answer_question(condition: str, llm: LLMClient, tools: list[Tool], question: str,
                     settings: GenerationSettings) -> LoopResult:
     if condition == "A":
@@ -130,13 +142,13 @@ def run_condition(condition: str, questions: list[Question], llm: LLMClient, too
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--condition", required=True, choices=CONDITIONS)
-    parser.add_argument("--questions", required=True, type=Path)
+    parser.add_argument("--questions", required=True, type=Path, nargs="+", help="one or more JSONL files")
     parser.add_argument("--config", required=True, type=Path)
     parser.add_argument("--label", required=True, help="e.g. dev, test; goes in the log file name")
     args = parser.parse_args(argv)
 
     config = load_run_config(args.config)
-    questions = load_questions(args.questions)
+    questions = load_question_files(args.questions)
     llm_config = load_config()
     tools = make_tools(load_snapshot(config.snapshot))  # A gets none; loading also checks the manifest
     label = f"{args.label}_{args.condition}"
@@ -155,7 +167,7 @@ def main(argv: list[str] | None = None) -> None:
         if args.condition == "C" else None,
     )
     header["config_file"] = str(args.config)
-    header["questions_file"] = str(args.questions)
+    header["questions_files"] = [str(p) for p in args.questions]
     with RunLog(new_run_path(RUNS_DIR, label), header) as log:
         print(f"log: {log.path}", flush=True)
         run_condition(args.condition, questions, LLMClient(llm_config), tools, config.settings, log)

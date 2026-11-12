@@ -11,8 +11,8 @@ import openai
 from agent.civic import load_snapshot
 from agent.civic_tools import make_tools
 from agent.llm import GenerationSettings
-from evaluation.run import (SERVER_KEYS, Question, RunConfigError, answer_question, load_questions,
-                            load_run_config, run_condition)
+from evaluation.run import (SERVER_KEYS, Question, RunConfigError, answer_question, load_question_files,
+                            load_questions, load_run_config, run_condition)
 from tests.civic_fixture import SnapshotTestCase
 from tests.test_tool_loop import SETTINGS, ScriptedLLM, response
 
@@ -108,6 +108,17 @@ class LoadQuestionsTest(TempDirTestCase):
     def test_missing_question_refused(self):
         with self.assertRaisesRegex(ValueError, ":1: needs"):
             load_questions(self.write("q.jsonl", '{"id": "q1"}\n'))
+
+    def test_several_files_read_in_order(self):
+        a = self.write("a.jsonl", '{"id": "q1", "question": "Q1?"}\n')
+        b = self.write("b.jsonl", '{"id": "h1", "question": "H1?"}\n')
+        self.assertEqual([q.id for q in load_question_files([a, b])], ["q1", "h1"])
+
+    def test_duplicate_id_across_files_refused(self):
+        a = self.write("a.jsonl", '{"id": "q1", "question": "Q1?"}\n')
+        b = self.write("b.jsonl", '{"id": "q1", "question": "other?"}\n')
+        with self.assertRaisesRegex(ValueError, "duplicate id 'q1'"):
+            load_question_files([a, b])
 
     def test_empty_file_refused(self):
         with self.assertRaisesRegex(ValueError, "no questions"):
