@@ -50,6 +50,14 @@ python data/download_civic.py
 
 Writes the TSVs and a manifest.json (URLs, sha256, download time) to data/raw/01-Nov-2026/.
 
+Run one condition over a question file (server up):
+
+```
+python -m evaluation.run --condition B --questions <file.jsonl> --config configs/greedy.json --label dev
+```
+
+Writes runs/<time>_dev_B.jsonl. The config holds every setting that changes results.
+
 Tests:
 
 ```
