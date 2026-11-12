@@ -10,14 +10,32 @@ from agent.config import LLMConfig
 
 DEFAULT_TIMEOUT_S = 300.0
 
+# The values that switch top-p and top-k off (mlx-vlm: generation.py applies top_k
+# only when > 0, top_p only when < 1). Greedy decoding uses temperature 0 with both off.
+TOP_P_OFF = 1.0
+TOP_K_OFF = 0
+
 
 @dataclass(frozen=True)
 class GenerationSettings:
-    """No defaults on purpose: every call states its temperature and seed."""
+    """No defaults on purpose: every call states every value that changes the output."""
 
     temperature: float
     seed: int
     max_tokens: int
+    top_p: float
+    top_k: int
+
+    def __post_init__(self):
+        # The server accepts bad or misspelled values silently, so check here.
+        if self.temperature < 0:
+            raise ValueError(f"temperature must be >= 0, got {self.temperature}")
+        if not 0 < self.top_p <= 1:
+            raise ValueError(f"top_p must be in (0, 1], got {self.top_p}")
+        if self.top_k < 0:
+            raise ValueError(f"top_k must be >= 0 (0 is off), got {self.top_k}")
+        if self.max_tokens <= 0:
+            raise ValueError(f"max_tokens must be > 0, got {self.max_tokens}")
 
 
 @dataclass(frozen=True)
@@ -69,6 +87,9 @@ class LLMClient:
             "temperature": settings.temperature,
             "seed": settings.seed,
             "max_tokens": settings.max_tokens,
+            "top_p": settings.top_p,
+            # top_k isn't in OpenAI's API; extra_body is merged into the JSON body as is.
+            "extra_body": {"top_k": settings.top_k},
         }
         if tools and response_schema is not None:
             # JSON mode constrains every token, so a tool call couldn't be emitted.

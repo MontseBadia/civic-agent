@@ -2,7 +2,7 @@ import json
 import unittest
 
 from agent.answer import ANSWER_SCHEMA
-from agent.llm import GenerationSettings, LLMResponse, ToolCall
+from agent.llm import TOP_K_OFF, TOP_P_OFF, GenerationSettings, LLMResponse, ToolCall
 from agent.prompts import C_FINAL_INSTRUCTION
 from agent.tool_loop import (
     MAX_RESULT_CHARS,
@@ -14,7 +14,7 @@ from agent.tool_loop import (
     validate_arguments,
 )
 
-SETTINGS = GenerationSettings(temperature=0.0, seed=7, max_tokens=256)
+SETTINGS = GenerationSettings(temperature=0.0, seed=7, max_tokens=256, top_p=TOP_P_OFF, top_k=TOP_K_OFF)
 MESSAGES = [{"role": "user", "content": "question"}]
 FINAL_JSON = '{"final": true}'
 

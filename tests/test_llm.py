@@ -1,12 +1,17 @@
+import json
 import unittest
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
+import httpx2
+import openai
+
 from agent.config import LLMConfig
-from agent.llm import GenerationSettings, LLMClient
+from agent.llm import TOP_K_OFF, TOP_P_OFF, GenerationSettings, LLMClient
 
 CONFIG = LLMConfig(base_url="http://h/v1", api_key="k", model="test-model")
-SETTINGS = GenerationSettings(temperature=0.0, seed=7, max_tokens=256)
+SETTINGS = GenerationSettings(temperature=0.0, seed=7, max_tokens=256, top_p=TOP_P_OFF, top_k=TOP_K_OFF)
+SAMPLING = GenerationSettings(temperature=1.0, seed=7, max_tokens=256, top_p=0.95, top_k=20)
 MESSAGES = [{"role": "user", "content": "hi"}]
 
 
@@ -36,6 +41,30 @@ class RequestTest(unittest.TestCase):
         self.assertNotIn("tools", sent)
         self.assertNotIn("response_format", sent)
 
+    def test_sends_top_p_and_top_k(self):
+        llm, create = client_returning(fake_completion())
+        llm.chat(MESSAGES, SAMPLING)
+        sent = create.call_args.kwargs
+        self.assertEqual(sent["top_p"], 0.95)
+        self.assertEqual(sent["extra_body"], {"top_k": 20})
+
+    def test_top_k_reaches_the_http_body_as_a_top_level_field(self):
+        # The server ignores unknown or misplaced fields silently, so check the wire.
+        sent = {}
+
+        def handler(request):
+            sent.update(json.loads(request.content))
+            return httpx2.Response(200, json={
+                "id": "x", "object": "chat.completion", "created": 0, "model": "m",
+                "choices": [{"index": 0, "finish_reason": "stop", "message": {"role": "assistant", "content": "hi"}}],
+            })
+
+        client = openai.OpenAI(base_url="http://h/v1", api_key="k", max_retries=0,
+                               http_client=httpx2.Client(transport=httpx2.MockTransport(handler)))
+        LLMClient(CONFIG, client=client).chat(MESSAGES, SAMPLING)
+        self.assertEqual((sent["top_p"], sent["top_k"]), (0.95, 20))
+        self.assertNotIn("extra_body", sent)
+
     def test_response_schema_becomes_json_schema_format(self):
         llm, create = client_returning(fake_completion())
         schema = {"type": "object"}
@@ -61,6 +90,18 @@ class RequestTest(unittest.TestCase):
         llm = LLMClient(CONFIG)
         self.assertEqual(llm._client.max_retries, 0)
         self.assertEqual(llm._client.timeout, 300.0)
+
+
+class SettingsTest(unittest.TestCase):
+    def test_all_values_required(self):
+        with self.assertRaises(TypeError):
+            GenerationSettings(temperature=0.0, seed=7, max_tokens=256)
+
+    def test_invalid_values_refused(self):
+        valid = dict(temperature=1.0, seed=7, max_tokens=256, top_p=0.95, top_k=20)
+        for field, bad in [("temperature", -0.1), ("top_p", 0.0), ("top_p", 1.5), ("top_k", -1), ("max_tokens", 0)]:
+            with self.subTest(field=field, value=bad), self.assertRaisesRegex(ValueError, field):
+                GenerationSettings(**{**valid, field: bad})
 
 
 class ResponseTest(unittest.TestCase):

@@ -45,7 +45,7 @@ class HeaderTest(TempDirTestCase):
         manifest.write_text(json.dumps({"release": "01-Jan-2000", "files": []}))
         return run_header(
             label="check", llm_config=LLMConfig(base_url="http://h/v1", api_key="secret-key", model="m"),
-            settings=GenerationSettings(temperature=0.0, seed=7, max_tokens=64),
+            settings=GenerationSettings(temperature=1.0, seed=7, max_tokens=64, top_p=0.95, top_k=20),
             prompt_hash="p", tools_hash="t", manifest_path=manifest,
             server={"prefill_step_size": 512}, git={"commit": "abc", "dirty": False},
             loop_limits={"max_tool_calls": 6, "max_duplicate_calls": 2},
@@ -56,7 +56,7 @@ class HeaderTest(TempDirTestCase):
 
     def test_contains_what_runs_must_log(self):
         h = self.header()
-        self.assertEqual(h["settings"], {"temperature": 0.0, "seed": 7, "max_tokens": 64})
+        self.assertEqual(h["settings"], {"temperature": 1.0, "seed": 7, "max_tokens": 64, "top_p": 0.95, "top_k": 20})
         self.assertEqual((h["model"], h["prompt_hash"], h["tools_hash"]), ("m", "p", "t"))
         self.assertEqual(h["snapshot"]["release"], "01-Jan-2000")
         self.assertEqual(len(h["snapshot"]["manifest_sha256"]), 64)
