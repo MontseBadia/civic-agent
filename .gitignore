@@ -2,6 +2,7 @@
 CLAUDE.md
 .env
 local/
+.DS_Store
 
 # python
 .venv/
