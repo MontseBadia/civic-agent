@@ -69,17 +69,25 @@ def _retrieved_ids(result: LoopResult) -> list[str]:
 
 
 def record_from_loop(question: str, condition: str, result: LoopResult, duration_s: float) -> dict:
-    try:
-        answer, parse_error = asdict(parse_answer(result.final.content)), None
-    except AnswerParseError as e:
-        answer, parse_error = None, str(e)
+    if result.final is not None:
+        answered_by = "model"
+        try:
+            answer, parse_error = asdict(parse_answer(result.final.content)), None
+        except AnswerParseError as e:
+            answer, parse_error = None, str(e)
+    elif result.code_answer is not None:
+        answered_by, answer, parse_error = "code", asdict(result.code_answer), None
+    else:
+        # B stopped before any answer existed (extraction failed): wrong, like unparseable.
+        answered_by, answer, parse_error = None, None, f"no answer: stopped at {result.stop_reason}"
     return {
         "type": "question",
         "question": question,
         "condition": condition,
         "duration_s": duration_s,
         "stop_reason": result.stop_reason,
-        "final_content": result.final.content,
+        "answered_by": answered_by,
+        "final_content": result.final.content if result.final is not None else None,
         "answer": answer,
         "parse_error": parse_error,
         "retrieved_ids": _retrieved_ids(result),

@@ -18,13 +18,14 @@ EVIDENCE_COLUMNS = ["evidence_id", "molecular_profile", "molecular_profile_id", 
                     "variant_origin", "is_flagged"]
 
 FEATURES = [
-    {"feature_id": "1", "name": "GENEA", "feature_type": "Gene", "feature_aliases": "GA1,SHARED"},
+    # GENEB as an alias of GENEA: a symbol that is also another gene's alias (AR, AREG).
+    {"feature_id": "1", "name": "GENEA", "feature_type": "Gene", "feature_aliases": "GA1,SHARED,GENEB"},
     {"feature_id": "2", "name": "GENEB", "feature_type": "Gene", "feature_aliases": "SHARED"},
 ]
 
 VARIANTS = [
     {"variant_id": "101", "feature_id": "1", "feature_name": "GENEA", "variant": "V600E",
-     "variant_aliases": "VAL600GLU,RS1",
+     "variant_aliases": "VAL600GLU,RS1,K601E",  # K601E: a name that is also another variant's alias
      "hgvs_descriptions": "NP_000001.1:p.Val600Glu,NC_000001.11:g.100A>T",
      "single_variant_molecular_profile_id": "1001"},
     {"variant_id": "102", "feature_id": "1", "feature_name": "GENEA", "variant": "K601E",

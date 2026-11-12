@@ -45,6 +45,12 @@ CONDITION_PARTS = {
 
 B_RECORDS_INTRO = "These records were retrieved from CIViC for this question:"
 
+# B's first call. Copy only: aliases and notation (Val600Glu) are resolved by
+# the lookup code, the same code C's tools use.
+B_EXTRACTION_PROMPT = """\
+Copy the gene, the variant and the disease named in the question, each \
+exactly as written there. Don't correct, expand or translate them."""
+
 C_FINAL_INSTRUCTION = "Now give your answer."
 
 
@@ -56,6 +62,6 @@ def system_prompt(condition: str) -> str:
 
 def prompt_hash() -> str:
     """One hash over every prompt text, so a change anywhere shows in every run log."""
-    parts = [CORE, B_RECORDS_INTRO, C_FINAL_INSTRUCTION]
+    parts = [CORE, B_RECORDS_INTRO, B_EXTRACTION_PROMPT, C_FINAL_INSTRUCTION]
     parts += [f"{name}:{text}" for name, text in sorted(CONDITION_PARTS.items())]
     return hashlib.sha256("\n\x00\n".join(parts).encode()).hexdigest()[:12]

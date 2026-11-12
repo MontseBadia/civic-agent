@@ -4,6 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from agent.answer import Answer
 from agent.config import LLMConfig
 from agent.llm import GenerationSettings, LLMResponse
 from agent.run_log import RunLog, git_state, new_run_path, record_from_error, record_from_loop, run_header
@@ -28,7 +29,7 @@ def tool_step(result, outcome="ok"):
 def loop_result(content=VALID_ANSWER, steps=()):
     model = ModelStep(final=True, finish_reason="stop", prompt_tokens=10, completion_tokens=5,
                       duration_s=1.0, tool_call_count=0)
-    return LoopResult(final=final(content), trace=(*steps, model),
+    return LoopResult(final=final(content), code_answer=None, trace=(*steps, model),
                       messages=({"role": "user", "content": "q"},), stop_reason="model_stopped")
 
 
@@ -85,6 +86,20 @@ class RecordTest(unittest.TestCase):
     def test_trace_steps_keep_their_kind(self):
         r = record_from_loop("q", "C", loop_result(steps=(tool_step({"rows": []}),)), duration_s=2.0)
         self.assertEqual([s["kind"] for s in r["trace"]], ["ToolStep", "ModelStep"])
+
+    def test_code_answer_kept_without_final_content(self):
+        answer = Answer(gene="FOO1", variant="X1Y", disease="Disease X", explanation="e", abstain=True,
+                        abstain_reason="unknown_gene", drugs=(), evidence_ids=())
+        result = LoopResult(final=None, code_answer=answer, trace=(), messages=(), stop_reason="unknown_gene")
+        r = record_from_loop("q", "B", result, duration_s=2.0)
+        self.assertEqual((r["answered_by"], r["answer"]["abstain_reason"]), ("code", "unknown_gene"))
+        self.assertIsNone(r["final_content"])
+
+    def test_no_answer_counts_as_parse_error(self):
+        result = LoopResult(final=None, code_answer=None, trace=(), messages=(), stop_reason="extraction_failed")
+        r = record_from_loop("q", "B", result, duration_s=2.0)
+        self.assertIsNone(r["answer"])
+        self.assertIn("extraction_failed", r["parse_error"])
 
     def test_error_record_keeps_server_body(self):
         error = RuntimeError("Error code: 500")

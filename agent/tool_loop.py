@@ -6,7 +6,7 @@ import time
 from dataclasses import dataclass
 from typing import Any, Callable
 
-from agent.answer import ANSWER_SCHEMA
+from agent.answer import ANSWER_SCHEMA, Answer
 from agent.llm import GenerationSettings, LLMClient, LLMResponse, ToolCall
 from agent.prompts import C_FINAL_INSTRUCTION
 
@@ -89,10 +89,17 @@ class ToolStep:
 
 @dataclass(frozen=True)
 class LoopResult:
-    final: LLMResponse
+    """Result of any condition, so the runner and run log treat A, B and C the same."""
+
+    final: LLMResponse | None  # the answer call; None when code ended the question (B)
+    code_answer: Answer | None  # written by code when a B rule fires; else None
     trace: tuple[ModelStep | ToolStep, ...]
     messages: tuple[dict, ...]
-    stop_reason: str  # model_stopped, duplicates, budget
+    stop_reason: str | None  # C: model_stopped, duplicates, budget. B: which step ended it. A: None
+
+    def __post_init__(self):
+        if self.final is not None and self.code_answer is not None:
+            raise ValueError("an answer comes from the model or from code, not both")
 
 
 def tools_hash(tools: list[Tool]) -> str:
@@ -131,7 +138,8 @@ def _error_step(call: ToolCall, outcome: str, message: str, start: float) -> Too
     )
 
 
-def _run_call(call: ToolCall, tools: dict[str, Tool]) -> ToolStep:
+def run_call(call: ToolCall, tools: dict[str, Tool]) -> ToolStep:
+    """Also used by B, so B and C run lookups through the same code."""
     start = time.monotonic()
     tool = tools.get(call.name)
     if tool is None:
@@ -183,7 +191,7 @@ def _call_key(call: ToolCall) -> str | None:
     return json.dumps([call.name, _casefold_strings(arguments)], sort_keys=True)
 
 
-def _model_step(response: LLMResponse, final: bool) -> ModelStep:
+def model_step(response: LLMResponse, final: bool) -> ModelStep:
     return ModelStep(
         final=final,
         finish_reason=response.finish_reason,
@@ -229,7 +237,7 @@ def run_tool_loop(
     # max_tool_calls tool turns.
     while not (limit_reached or stopped_on_duplicates):
         response = llm.chat(history, settings, tools=api_tools)
-        trace.append(_model_step(response, final=False))
+        trace.append(model_step(response, final=False))
         if not response.tool_calls:
             if response.content:
                 history.append({"role": "assistant", "content": response.content})
@@ -251,7 +259,7 @@ def run_tool_loop(
                     step = _error_step(call, "duplicate_call", message, time.monotonic())
                     duplicates += 1
                 else:
-                    step = _run_call(call, by_name)
+                    step = run_call(call, by_name)
                     if key is not None:
                         seen_calls.add(key)
             trace.append(step)
@@ -264,7 +272,7 @@ def run_tool_loop(
 
     history.append({"role": "user", "content": C_FINAL_INSTRUCTION})
     final = llm.chat(history, settings, response_schema=ANSWER_SCHEMA)
-    trace.append(_model_step(final, final=True))
+    trace.append(model_step(final, final=True))
     # One reason, so reports count each stop once. When the second duplicate is
     # also the last budgeted call, duplicates is the more specific reason.
     if stopped_on_duplicates:
@@ -273,4 +281,5 @@ def run_tool_loop(
         stop_reason = "budget"
     else:
         stop_reason = "model_stopped"
-    return LoopResult(final=final, trace=tuple(trace), messages=tuple(history), stop_reason=stop_reason)
+    return LoopResult(final=final, code_answer=None, trace=tuple(trace), messages=tuple(history),
+                      stop_reason=stop_reason)

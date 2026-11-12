@@ -37,6 +37,11 @@ class PromptHashTest(unittest.TestCase):
         with patch.object(prompts, "C_FINAL_INSTRUCTION", "Answer."):
             self.assertNotEqual(prompts.prompt_hash(), before)
 
+    def test_changes_with_b_extraction_prompt(self):
+        before = prompts.prompt_hash()
+        with patch.object(prompts, "B_EXTRACTION_PROMPT", "Extract."):
+            self.assertNotEqual(prompts.prompt_hash(), before)
+
 
 if __name__ == "__main__":
     unittest.main()
