@@ -35,6 +35,18 @@ VARIANTS = [
 ]
 
 
+PROFILE_COLUMNS = ["name", "molecular_profile_id", "variant_ids"]
+
+PROFILES = [
+    {"name": "GENEA V600E", "molecular_profile_id": "1001", "variant_ids": "101"},
+    {"name": "GENEA K601E", "molecular_profile_id": "1002", "variant_ids": "102"},
+    {"name": "GENEB Amplification", "molecular_profile_id": "1003", "variant_ids": "103"},
+    {"name": "GENEA V600E AND GENEB Amplification", "molecular_profile_id": "5000", "variant_ids": "101,103"},
+    # One variant, but means its absence: not a single-variant profile.
+    {"name": "NOT GENEA K601E", "molecular_profile_id": "5001", "variant_ids": "102"},
+]
+
+
 def evidence_row(eid, profile_id, disease, therapies="", interaction="", etype="Predictive",
                  direction="Supports", significance="Sensitivity/Response", flagged="false",
                  statement="Made-up statement.", rating="3"):
@@ -78,6 +90,7 @@ def write_snapshot(directory: Path) -> Path:
         f"{RELEASE}-FeatureSummaries.tsv": (FEATURE_COLUMNS, FEATURES),
         f"{RELEASE}-VariantSummaries.tsv": (VARIANT_COLUMNS, VARIANTS),
         f"{RELEASE}-AcceptedClinicalEvidenceSummaries.tsv": (EVIDENCE_COLUMNS, EVIDENCE),
+        f"{RELEASE}-MolecularProfileSummaries.tsv": (PROFILE_COLUMNS, PROFILES),
     }
     entries = []
     for name, (columns, rows) in files.items():
