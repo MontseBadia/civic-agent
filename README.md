@@ -50,6 +50,12 @@ python data/download_civic.py
 
 Writes the TSVs and a manifest.json (URLs, sha256, download time) to data/raw/01-Nov-2026/.
 
+Templated questions and reference answers (dev and test):
+
+```
+python -m evaluation.generate --snapshot data/raw/01-Nov-2026 --seed 7 --out data/questions
+```
+
 Run one condition over a question file (server up):
 
 ```
