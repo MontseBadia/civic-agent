@@ -10,7 +10,10 @@ from agent.answer import ANSWER_SCHEMA
 from agent.llm import GenerationSettings, LLMClient, LLMResponse, ToolCall
 from agent.prompts import C_FINAL_INSTRUCTION
 
-MAX_TOOL_CALLS = 8
+# The needed path is 4 calls (gene, variant, diseases, evidence); 2 spare.
+MAX_TOOL_CALLS = 6
+# Two repeats means the model has nothing new to look up; go to the answer.
+MAX_DUPLICATE_CALLS = 2
 # Bug guard above get_evidence's 35,000 budget, not a context budget.
 MAX_RESULT_CHARS = 40_000
 
@@ -78,7 +81,7 @@ class ToolStep:
     call_id: str
     name: str
     raw_arguments: str
-    outcome: str  # ok, invalid_arguments, unknown_tool, tool_error, over_limit
+    outcome: str  # ok, invalid_arguments, unknown_tool, tool_error, duplicate_call, over_limit
     result: Any  # the tool's return value when outcome is ok, else None
     content: str  # what the model was sent
     duration_s: float
@@ -89,7 +92,7 @@ class LoopResult:
     final: LLMResponse
     trace: tuple[ModelStep | ToolStep, ...]
     messages: tuple[dict, ...]
-    limit_reached: bool
+    stop_reason: str  # model_stopped, duplicates, budget
 
 
 def tools_hash(tools: list[Tool]) -> str:
@@ -161,6 +164,25 @@ def _run_call(call: ToolCall, tools: dict[str, Tool]) -> ToolStep:
     )
 
 
+def _casefold_strings(value: Any) -> Any:
+    if isinstance(value, str):
+        return value.casefold()
+    if isinstance(value, dict):
+        return {k: _casefold_strings(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_casefold_strings(v) for v in value]
+    return value
+
+
+def _call_key(call: ToolCall) -> str | None:
+    """Same tool + same arguments, ignoring key order and text case. None if not valid JSON."""
+    try:
+        arguments = json.loads(call.arguments)
+    except json.JSONDecodeError:
+        return None
+    return json.dumps([call.name, _casefold_strings(arguments)], sort_keys=True)
+
+
 def _model_step(response: LLMResponse, final: bool) -> ModelStep:
     return ModelStep(
         final=final,
@@ -189,6 +211,7 @@ def run_tool_loop(
     tools: list[Tool],
     settings: GenerationSettings,
     max_tool_calls: int = MAX_TOOL_CALLS,
+    max_duplicate_calls: int = MAX_DUPLICATE_CALLS,
 ) -> LoopResult:
     by_name = {t.name: t for t in tools}
     if len(by_name) != len(tools):
@@ -198,9 +221,13 @@ def run_tool_loop(
     trace: list[ModelStep | ToolStep] = []
     calls_used = 0
     limit_reached = False
+    seen_calls: set[str] = set()
+    duplicates = 0
+    stopped_on_duplicates = False
 
-    # Each turn with tool calls uses budget or hits the limit, so this ends.
-    while not limit_reached:
+    # Each turn with tool calls uses budget, so this ends after at most
+    # max_tool_calls tool turns.
+    while not (limit_reached or stopped_on_duplicates):
         response = llm.chat(history, settings, tools=api_tools)
         trace.append(_model_step(response, final=False))
         if not response.tool_calls:
@@ -212,15 +239,38 @@ def run_tool_loop(
         # Every tool call id needs a tool message back, refused ones included.
         for call in response.tool_calls:
             if calls_used >= max_tool_calls:
-                limit_reached = True
+                # Only within one turn that asks for more than the budget left.
                 step = _error_step(call, "over_limit", "not run: tool call limit reached", time.monotonic())
             else:
                 calls_used += 1
-                step = _run_call(call, by_name)
+                key = _call_key(call)
+                if key is not None and key in seen_calls:
+                    # Not run: the result is already in the history. The error is the
+                    # latest message, where the model looks, unlike the system prompt rule.
+                    message = f"already called {call.name} with these arguments; the result is earlier in the conversation"
+                    step = _error_step(call, "duplicate_call", message, time.monotonic())
+                    duplicates += 1
+                else:
+                    step = _run_call(call, by_name)
+                    if key is not None:
+                        seen_calls.add(key)
             trace.append(step)
             history.append({"role": "tool", "tool_call_id": call.id, "content": step.content})
+        # Checked after the turn, since every tool call id in it needs a reply.
+        # Budget used up: go straight to the final answer. Asking the model once
+        # more only to refuse its call cost a full model turn (60 to 150 s).
+        limit_reached = calls_used >= max_tool_calls
+        stopped_on_duplicates = duplicates >= max_duplicate_calls
 
     history.append({"role": "user", "content": C_FINAL_INSTRUCTION})
     final = llm.chat(history, settings, response_schema=ANSWER_SCHEMA)
     trace.append(_model_step(final, final=True))
-    return LoopResult(final=final, trace=tuple(trace), messages=tuple(history), limit_reached=limit_reached)
+    # One reason, so reports count each stop once. When the second duplicate is
+    # also the last budgeted call, duplicates is the more specific reason.
+    if stopped_on_duplicates:
+        stop_reason = "duplicates"
+    elif limit_reached:
+        stop_reason = "budget"
+    else:
+        stop_reason = "model_stopped"
+    return LoopResult(final=final, trace=tuple(trace), messages=tuple(history), stop_reason=stop_reason)
