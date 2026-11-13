@@ -93,7 +93,8 @@ def make_tools(snapshot: CivicSnapshot) -> list[Tool]:
             name="search_gene",
             description=(
                 "Find CIViC genes by symbol or alias, case-insensitive. Returns every match: "
-                "none means the gene isn't in CIViC, several means the name is ambiguous."
+                "none means the gene isn't in CIViC, several means the name is ambiguous. "
+                "A fusion is its own entry named GENE1::GENE2 (COL1A1::PDGFB), with variant Fusion."
             ),
             parameters={
                 "type": "object",

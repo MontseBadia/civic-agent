@@ -18,7 +18,9 @@ Only the disease named in the question counts, not its subtypes or \
 related diseases. Sensitivity means significance Sensitivity/Response; \
 Reduced Sensitivity doesn't count. Any evidence level counts, including \
 preclinical. Evidence items for therapies given in combination or in \
-sequence don't count; therapies tested separately do.
+sequence (therapy_interaction_type Combination or Sequential) don't count. \
+Substitutes means each listed therapy was tested on its own, so each one \
+counts.
 
 Use generic (INN) drug names, not brand names or development codes.
 
@@ -37,10 +39,16 @@ Keep the explanation to three sentences or fewer."""
 CONDITION_PARTS = {
     "A": "No records are provided. Answer from what you know about CIViC.",
     "B": "Records retrieved from CIViC for this question are given in the user message.",
-    "C": (
-        "Use the tools to find the evidence. Don't repeat a call with the same "
-        "arguments. When done, stop calling tools."
-    ),
+    "C": """\
+Use the tools to find the evidence. Do not repeat a call with the same arguments.
+
+Stop calling tools and produce your final answer when any of these conditions is met:
+
+- `get_evidence` returned all rows (`truncated: false`) for the question's molecular profile and disease.
+- The gene or variant is not found in CIViC, or the disease cannot be matched to a disease listed by `list_diseases`.
+- The gene or variant matches multiple entries that cannot be distinguished from the question.
+
+Do not make additional calls once one of these conditions is met.""",
 }
 
 B_RECORDS_INTRO = "These records were retrieved from CIViC for this question:"
@@ -49,7 +57,9 @@ B_RECORDS_INTRO = "These records were retrieved from CIViC for this question:"
 # the lookup code, the same code C's tools use.
 B_EXTRACTION_PROMPT = """\
 Copy the gene, the variant and the disease named in the question, each \
-exactly as written there. Don't correct, expand or translate them."""
+exactly as written there. Don't correct, expand or translate them. For a \
+fusion written as GENE1::GENE2 Fusion (COL1A1::PDGFB Fusion), the gene is \
+GENE1::GENE2 and the variant is Fusion."""
 
 C_FINAL_INSTRUCTION = "Now give your answer."
 
