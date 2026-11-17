@@ -9,9 +9,10 @@ local/
 __pycache__/
 *.pyc
 
-# run outputs
+# run outputs (test results committed, logs kept local)
 runs/
-results/
+results/*
+!results/test/
 
 # raw download
 data/raw/

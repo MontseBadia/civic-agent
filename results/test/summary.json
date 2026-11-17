@@ -1,0 +1,263 @@
+{
+  "scorer_git": {
+    "commit": "2fb598c72ae9ce66671ae5f01e1883bab674dc63",
+    "dirty": false
+  },
+  "questions": [
+    "data/questions/test.jsonl",
+    "data/questions/hand_test.jsonl"
+  ],
+  "runs": {
+    "A": {
+      "file": "runs/20261116-123247_test_A.jsonl",
+      "label": "test_A",
+      "git": {
+        "commit": "2fb598c72ae9ce66671ae5f01e1883bab674dc63",
+        "dirty": false
+      },
+      "prompt_hash": "284dcde65f23"
+    },
+    "B": {
+      "file": "runs/20261116-124251_test_B.jsonl",
+      "label": "test_B",
+      "git": {
+        "commit": "2fb598c72ae9ce66671ae5f01e1883bab674dc63",
+        "dirty": false
+      },
+      "prompt_hash": "284dcde65f23"
+    },
+    "C": {
+      "file": "runs/20261116-130147_test_C.jsonl",
+      "label": "test_C",
+      "git": {
+        "commit": "2fb598c72ae9ce66671ae5f01e1883bab674dc63",
+        "dirty": false
+      },
+      "prompt_hash": "284dcde65f23"
+    }
+  },
+  "by_condition": {
+    "A": {
+      "templated": {
+        "n": 40,
+        "correct": 7,
+        "accuracy": 0.175,
+        "errors": 0,
+        "unparseable": 0,
+        "drug_precision": 0.25,
+        "drug_recall": 0.018518518518518517,
+        "missed_abstentions": 0,
+        "false_abstentions": 31,
+        "wrong_abstain_reason": 0,
+        "cited_precision": null,
+        "cited_recall": 0.0,
+        "citation_validity": null,
+        "invented_citations": null,
+        "claim_support": 0.0,
+        "retrieved_recall": 0.0,
+        "lookup_accuracy": 0.0,
+        "cost": {
+          "mean_s": 10.667411492700008,
+          "median_s": 10.496064146000009,
+          "mean_model_calls": 1,
+          "mean_tool_calls": 0,
+          "mean_prompt_tokens": 358.275,
+          "mean_completion_tokens": 101.275
+        }
+      },
+      "hand": {
+        "n": 10,
+        "correct": 2,
+        "accuracy": 0.2,
+        "errors": 0,
+        "unparseable": 0,
+        "drug_precision": 0.6666666666666666,
+        "drug_recall": 0.2857142857142857,
+        "missed_abstentions": 0,
+        "false_abstentions": 3,
+        "wrong_abstain_reason": 3,
+        "cited_precision": null,
+        "cited_recall": 0.0,
+        "citation_validity": null,
+        "invented_citations": null,
+        "claim_support": 0.0,
+        "retrieved_recall": 0.0,
+        "lookup_accuracy": 0.0,
+        "cost": {
+          "mean_s": 11.229379458499988,
+          "median_s": 10.94865637549998,
+          "mean_model_calls": 1,
+          "mean_tool_calls": 0,
+          "mean_prompt_tokens": 358,
+          "mean_completion_tokens": 111
+        }
+      }
+    },
+    "B": {
+      "templated": {
+        "n": 40,
+        "correct": 35,
+        "accuracy": 0.875,
+        "errors": 0,
+        "unparseable": 0,
+        "drug_precision": 0.98,
+        "drug_recall": 0.9074074074074074,
+        "missed_abstentions": 0,
+        "false_abstentions": 3,
+        "wrong_abstain_reason": 0,
+        "cited_precision": 1.0,
+        "cited_recall": 0.8809523809523809,
+        "citation_validity": 1.0,
+        "invented_citations": 0.0,
+        "claim_support": 0.98,
+        "retrieved_recall": 1.0,
+        "lookup_accuracy": 1.0,
+        "cost": {
+          "mean_s": 18.896112913649972,
+          "median_s": 19.11616808349993,
+          "mean_model_calls": 1.85,
+          "mean_tool_calls": 3,
+          "mean_prompt_tokens": 886.075,
+          "mean_completion_tokens": 152.3
+        }
+      },
+      "hand": {
+        "n": 10,
+        "correct": 8,
+        "accuracy": 0.8,
+        "errors": 0,
+        "unparseable": 0,
+        "drug_precision": 1.0,
+        "drug_recall": 0.5714285714285714,
+        "missed_abstentions": 0,
+        "false_abstentions": 2,
+        "wrong_abstain_reason": 0,
+        "cited_precision": 1.0,
+        "cited_recall": 0.5217391304347826,
+        "citation_validity": 1.0,
+        "invented_citations": 0.0,
+        "claim_support": 1.0,
+        "retrieved_recall": 0.5217391304347826,
+        "lookup_accuracy": 0.6666666666666666,
+        "cost": {
+          "mean_s": 11.268317120700043,
+          "median_s": 3.2503109790000053,
+          "mean_model_calls": 1.4,
+          "mean_tool_calls": 2.2,
+          "mean_prompt_tokens": 527.4,
+          "mean_completion_tokens": 90.3
+        }
+      }
+    },
+    "C": {
+      "templated": {
+        "n": 40,
+        "correct": 39,
+        "accuracy": 0.975,
+        "errors": 0,
+        "unparseable": 0,
+        "drug_precision": 1.0,
+        "drug_recall": 0.9814814814814815,
+        "missed_abstentions": 0,
+        "false_abstentions": 0,
+        "wrong_abstain_reason": 0,
+        "cited_precision": 1.0,
+        "cited_recall": 1.0,
+        "citation_validity": 1.0,
+        "invented_citations": 0.0,
+        "claim_support": 1.0,
+        "retrieved_recall": 1.0,
+        "lookup_accuracy": 0.975,
+        "cost": {
+          "mean_s": 138.68555259892497,
+          "median_s": 134.14399637450015,
+          "mean_model_calls": 6.95,
+          "mean_tool_calls": 5.775,
+          "mean_prompt_tokens": 11599.825,
+          "mean_completion_tokens": 449.925
+        }
+      },
+      "hand": {
+        "n": 10,
+        "correct": 10,
+        "accuracy": 1.0,
+        "errors": 0,
+        "unparseable": 0,
+        "drug_precision": 1.0,
+        "drug_recall": 1.0,
+        "missed_abstentions": 0,
+        "false_abstentions": 0,
+        "wrong_abstain_reason": 0,
+        "cited_precision": 1.0,
+        "cited_recall": 1.0,
+        "citation_validity": 1.0,
+        "invented_citations": 0.0,
+        "claim_support": 1.0,
+        "retrieved_recall": 1.0,
+        "lookup_accuracy": 1.0,
+        "cost": {
+          "mean_s": 128.3337784791999,
+          "median_s": 130.81679852100024,
+          "mean_model_calls": 6.3,
+          "mean_tool_calls": 5.8,
+          "mean_prompt_tokens": 10747.2,
+          "mean_completion_tokens": 414.6
+        }
+      }
+    }
+  },
+  "by_kind": {
+    "A": {
+      "T1": 0.058823529411764705,
+      "T2": 0.0,
+      "ambiguous_gene": 0.0,
+      "disease_wording": 0.5,
+      "free_wording": 0.0,
+      "gene_alias": 0.0,
+      "no_evidence": 1.0,
+      "unknown_gene": 0.5
+    },
+    "B": {
+      "T1": 0.7647058823529411,
+      "T2": 0.9411764705882353,
+      "ambiguous_gene": 1.0,
+      "disease_wording": 0.0,
+      "free_wording": 1.0,
+      "gene_alias": 1.0,
+      "no_evidence": 1.0,
+      "unknown_gene": 1.0
+    },
+    "C": {
+      "T1": 1.0,
+      "T2": 0.9411764705882353,
+      "ambiguous_gene": 1.0,
+      "disease_wording": 1.0,
+      "free_wording": 1.0,
+      "gene_alias": 1.0,
+      "no_evidence": 1.0,
+      "unknown_gene": 1.0
+    }
+  },
+  "mcnemar": {
+    "B vs A, templated": {
+      "first_only": 0,
+      "second_only": 28,
+      "p_value": 7.450580596923828e-09
+    },
+    "B vs A, hand": {
+      "first_only": 1,
+      "second_only": 7,
+      "p_value": 0.0703125
+    },
+    "C vs B, templated": {
+      "first_only": 0,
+      "second_only": 4,
+      "p_value": 0.125
+    },
+    "C vs B, hand": {
+      "first_only": 0,
+      "second_only": 2,
+      "p_value": 0.5
+    }
+  }
+}
