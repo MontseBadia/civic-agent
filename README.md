@@ -1,5 +1,7 @@
 # CIViC Agent
 
+![tests](https://github.com/MontseBadia/civic-agent/actions/workflows/tests.yml/badge.svg)
+
 This project has two parts:
 
 1. **A CLI assistant** that answers cancer-variant questions from CIViC evidence
