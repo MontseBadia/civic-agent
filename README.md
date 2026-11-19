@@ -6,7 +6,36 @@ This project has two parts:
 2. **An evaluation** comparing three approaches to answering those questions,
    to investigate the value of evidence retrieval and model-controlled tool use
 
-## Research questions
+*Research software. Not clinical advice.*
+
+## CLI Assistant
+
+Example question:
+
+```text
+"Which therapies have CIViC evidence items supporting sensitivity in Melanoma with BRAF V600K?"
+```
+
+Example answer (agent response):
+
+```text
+Drugs: Vemurafenib, Dabrafenib, Trametinib
+Explanation: CIViC evidence items support sensitivity of vemurafenib (EID1399, EID1400, EID4180), dabrafenib (EID2505), and trametinib (EID2506) in melanoma with BRAF V600K. Combination items (EID6179, EID6939, EID6941, EID6965) are excluded because they are combination therapies.
+
+Evidence cited
+EID      Disease   Type        Significance          Direction  Level  Citation                          Link
+EID1399  Melanoma  Predictive  Sensitivity/Response  Supports   B      McArthur et al., 2014 (24508103)  https://civicdb.org/links/evidence_items/1399
+EID2505  Melanoma  Predictive  Sensitivity/Response  Supports   B      Long et al., 2011 (21343559)      https://civicdb.org/links/evidence_items/2505
+```
+
+*Output shortened: the full table has five rows, one per cited item.*
+
+The evidence table comes straight from the CIViC snapshot, not from the
+model. Setup and usage are under How To below.
+
+## Evaluation
+
+### Research Questions
 
 For the evaluation phase, the following two questions are answered:
 
@@ -16,7 +45,7 @@ For the evaluation phase, the following two questions are answered:
 > 2. Does letting the model choose its own lookups improve results
 >    over a fixed pipeline (C vs B)?
 
-## Approaches compared
+### Approaches Compared
 
 | Condition | Gets CIViC evidence | Who picks the lookups |
 |---|---|---|
@@ -24,12 +53,7 @@ For the evaluation phase, the following two questions are answered:
 | B, fixed pipeline | Yes | Fixed code |
 | C, agent | Yes | The model |
 
-Example question: "Which therapies have CIViC evidence items supporting
-sensitivity in Melanoma with BRAF V600K?"
-
-*This is not clinical advice.*
-
-## Evaluation
+### Results
 
 Protocol, committed before the test run: [docs/protocol.md](docs/protocol.md).
 
@@ -52,10 +76,10 @@ The run logs these are scored from (`runs/`) are kept locally.
 
 Conclusion: Evidence helps (B vs A, p < 0.001). The agent's gain over the fixed pipeline is not significant (C vs B, p = 0.125) and costs about 7x the time. Two of C's four templated wins involve evidence statements that do not explicitly support the exact variant, although the structured CIViC records qualify.
 
-## Repository structure
+## Repository Structure
 
 ```text
-agent/          the assistant: snapshot lookups, tools, LLM client, prompts, tool loop, conditions
+agent/          the assistant: CLI, snapshot lookups, tools, LLM client, prompts, tool loop, conditions
 evaluation/     question generator, runner, scorer
 data/           download script, question set (snapshot goes to data/raw/, not committed)
 configs/        run settings (greedy.json is the frozen one)
@@ -64,7 +88,9 @@ results/test/   scored test results
 tests/          unit tests on a made-up snapshot, no model or API calls
 ```
 
-## Install
+## How To
+
+### Setup
 
 Using Python 3.13. Install dependencies and configure model endpoint:
 
@@ -75,17 +101,17 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 
-Fill in `.env`: any OpenAI-compatible endpoint works, hosted or local. Reproducing the reported evaluation requires the pinned local model and configuration described below.
+Fill in `.env`: any OpenAI-compatible endpoint works, hosted or local. Reproducing the reported evaluation requires the pinned local model and configuration described under Local Model.
 For the local server:
 - `LLM_BASE_URL=http://localhost:8080/v1`
 - `LLM_API_KEY` empty
 - `LLM_MODEL` the snapshot path (set after the download)
 
-## Local model
+### Local Model
 
 Qwen3.8-27B (4-bit MLX) served locally through `mlx-vlm==0.7.8` in its own venv.
 
-The project only talks to it over an OpenAI-compatible HTTP API. Pinned
+The assistant communicates with the model through an OpenAI-compatible HTTP API. Pinned
 to one revision: the server loads whatever model each request names, and
 a Hugging Face name silently pulls the latest revision. So the server
 runs from the downloaded snapshot, offline.
@@ -108,7 +134,7 @@ HF_HUB_OFFLINE=1 ~/.venvs/mlx-server/bin/python -m mlx_vlm.server \
 Apple Silicon only, ~15 GB download. On a 24 GB Mac the default prefill
 step (2048) runs out of GPU memory on ~10k-token prompts.
 
-## Data
+### CIViC Data
 
 Download the CIViC snapshot used for evaluation (release 01-Nov-2026, accepted evidence only):
 
@@ -119,7 +145,21 @@ python data/download_civic.py
 The above writes the TSVs and a `manifest.json` (URLs, sha256, download timestamps) to
 `data/raw/01-Nov-2026/`.
 
-## Questions
+### Run CLI Assistant
+
+One question per call, same settings and snapshot as the evaluation (server up):
+
+```bash
+python -m agent.cli --condition C --config configs/greedy.json \
+  "Which therapies have CIViC evidence items supporting sensitivity in Melanoma with BRAF V600K?"
+```
+
+In the command above, `--condition` picks A, B or C (see Approaches Compared); C is the agent.
+
+Prints the answer and one row per cited evidence item, taken from the
+snapshot. Each question is logged to `runs/cli/`.
+
+### Evaluation Questions
 
 The question set is in `data/questions/`, split by gene into dev and test:
 - Dev questions: used to tune prompts
@@ -136,7 +176,7 @@ python -m evaluation.generate \
 Hand-made questions (`data/questions/hand_dev.jsonl`, `hand_test.jsonl`)
 are written by hand.
 
-## Experiments
+### Run Evaluation
 
 The frozen run configuration is found in `configs/greedy.json` and the evaluation protocol is documented in `docs/protocol.md`.
 
@@ -164,7 +204,7 @@ python -m evaluation.score \
 
 The above writes `per_question.jsonl` and `summary.json` to `results/regenerate/` and prints the report, containing aggregate metrics, statistical comparisons and per-question results.
 
-## Tests
+### Run Tests
 
 Tests are run with:
 
