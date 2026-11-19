@@ -159,7 +159,7 @@ class CivicSnapshot:
         self._features = _unique_by(features, "id", "feature IDs")
         self._variants = _unique_by(variants, "id", "variant IDs")
         self._profiles = _unique_by(variants, "profile_id", "single-variant profile IDs")
-        _unique_by(evidence, "id", "evidence IDs")
+        self._evidence = _unique_by(evidence, "id", "evidence IDs")
 
         self._genes_by_name: dict[str, set[int]] = defaultdict(set)
         for f in features:
@@ -203,6 +203,10 @@ class CivicSnapshot:
             return list(rows)
         wanted = disease.strip().casefold()
         return [e for e in rows if e.disease.casefold() == wanted]
+
+    def evidence(self, evidence_id: int) -> Evidence | None:
+        """None for an ID not in the snapshot, flagged rows included (dropped at load)."""
+        return self._evidence.get(evidence_id)
 
     def diseases_for(self, profile_id: int) -> dict[str, int]:
         self.profile_variant(profile_id)
