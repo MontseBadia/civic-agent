@@ -213,3 +213,9 @@ Tests are run with:
 ```bash
 python -m unittest discover tests
 ```
+
+## License
+
+Code: MIT, see [LICENSE](LICENSE). CIViC data: CC0 1.0, from
+[civicdb.org](https://civicdb.org). CIViC: Griffith et al., Nat Genet
+49, 170–174 (2017), doi:10.1038/ng.3774.
