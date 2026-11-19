@@ -118,6 +118,15 @@ class LookupTest(SnapshotTestCase):
             ("Drugh", "HER2 Inhibitor CP-724,714", "2,4-pyrimidinediamine"),
         )
 
+    def test_evidence_by_id(self):
+        self.assertEqual(self.s.evidence(9001).disease, "Disease X")
+
+    def test_evidence_id_not_in_snapshot_returns_none(self):
+        self.assertIsNone(self.s.evidence(42))
+
+    def test_flagged_evidence_id_returns_none(self):
+        self.assertIsNone(self.s.evidence(9004))
+
     def test_record_keeps_civic_values(self):
         record = self.s.evidence_for(1001, "Disease X")[1].to_record()
         self.assertEqual(record["evidence_id"], "EID9002")
