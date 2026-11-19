@@ -133,6 +133,10 @@ All three conditions return the same JSON object (schema in `agent/answer.py`). 
 
 When the condition declines, `abstain` is true, `drugs` is empty and `abstain_reason` is one of `no_evidence`, `unknown_gene` or `ambiguous`. Output that does not match the schema counts as unparseable.
 
+### CLI
+
+`python -m agent.cli` answers one free-text question with any condition, using the same code path, settings and snapshot as the evaluation. It prints the answer and a table with one row per cited evidence item. The table is built from the CIViC snapshot by code. Each question is logged.
+
 ## Dataset and Questions
 
 ### CIViC Snapshot
@@ -483,6 +487,7 @@ The following capabilities were intentionally deferred:
 - **MCP server and client:** The four retrieval tools are implemented directly rather than exposed through MCP. This avoids additional infrastructure that is unnecessary for comparing retrieval strategies
 - **Retrieval-method comparison:** The experiment compares access to evidence and control over lookups, rather than benchmarking multiple search or retrieval algorithms
 - **FastAPI service:** The assistant is implemented as a CLI rather that a deployed HTTP service
+- **Follow-up questions:** The CLI answers one question per call, without conversation context
 
 ## Future Work
 
