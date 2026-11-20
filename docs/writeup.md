@@ -137,6 +137,10 @@ When the condition declines, `abstain` is true, `drugs` is empty and `abstain_re
 
 `python -m agent.cli` answers one free-text question with any condition, using the same code path, settings and snapshot as the evaluation. It prints the answer and a table with one row per cited evidence item. The table is built from the CIViC snapshot by code. Each question is logged.
 
+### MCP
+
+The four lookup tools are also exposed as an MCP server over stdio (`agent/mcp_server.py`), with the same names, descriptions and schemas that C uses. Tool failures come back as error results the model can read; an unknown tool is a protocol error. A small client (`agent/mcp_client.py`) starts the server, lists the tools and calls one. The evaluation and the CLI call the tools directly, so the reported results do not go through MCP.
+
 ## Dataset and Questions
 
 ### CIViC Snapshot
@@ -217,7 +221,7 @@ Hand-made questions also include cases involving unknown or ambiguous entities, 
 
 The reference answers represent **the therapies supported by qualifying CIViC evidence under the experiment's rules**, not clinical treatment recommendations.
 
-An evidence item may describe preclinical findings, limited evidence or results that do not generalize to all patients. The evaluation measures whether the assistant can retrieve and interpret the specified evidence, rather that whether a therapy should be prescribed.
+An evidence item may describe preclinical findings, limited evidence or results that do not generalize to all patients. The evaluation measures whether the assistant can retrieve and interpret the specified evidence, rather than whether a therapy should be prescribed.
 
 ## Evaluation Methodology
 
@@ -484,9 +488,8 @@ A's prompt begins with "No records are provided. Answer from what you know about
 The following capabilities were intentionally deferred:
 
 - **Live CIViC API integration:** The assistant uses a fixed snapshot to keep evidence consistent across conditions and make evaluation reproducible
-- **MCP server and client:** The four retrieval tools are implemented directly rather than exposed through MCP. This avoids additional infrastructure that is unnecessary for comparing retrieval strategies
 - **Retrieval-method comparison:** The experiment compares access to evidence and control over lookups, rather than benchmarking multiple search or retrieval algorithms
-- **FastAPI service:** The assistant is implemented as a CLI rather that a deployed HTTP service
+- **FastAPI service:** The assistant is implemented as a CLI rather than a deployed HTTP service
 - **Follow-up questions:** The CLI answers one question per call, without conversation context
 
 ## Future Work

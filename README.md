@@ -33,7 +33,7 @@ EID2505  Melanoma  Predictive  Sensitivity/Response  Supports   B      Long et a
 *Output shortened: the full table has five rows, one per cited item.*
 
 The evidence table comes straight from the CIViC snapshot, not from the
-model. Setup and usage are under How To below.
+model. The four lookup tools the agent uses are also available as an MCP server. Setup and usage are under How To below.
 
 ## Evaluation
 
@@ -81,7 +81,7 @@ Conclusion: Evidence helps (B vs A, p < 0.001). The agent's gain over the fixed 
 ## Repository Structure
 
 ```text
-agent/          the assistant: CLI, snapshot lookups, tools, LLM client, prompts, tool loop, conditions
+agent/          the assistant: CLI, MCP server and client, snapshot lookups, tools, LLM client, prompts, tool loop, conditions
 evaluation/     question generator, runner, scorer
 data/           download script, question set (snapshot goes to data/raw/, not committed)
 configs/        run settings (greedy.json is the frozen one)
@@ -160,6 +160,20 @@ In the command above, `--condition` picks A, B or C (see Approaches Compared); C
 
 Prints the answer and one row per cited evidence item, taken from the
 snapshot. Each question is logged to `runs/cli/`.
+
+### Run MCP Server and Client
+
+The four CIViC lookup tools are also exposed as an MCP server over stdio.
+The client starts the server, lists the tools and calls one (no model involved):
+
+```bash
+python -m agent.mcp_client --snapshot data/raw/01-Nov-2026 \
+  search_gene '{"gene": "BRAF"}'
+```
+
+Other MCP clients can start the server with
+`python -m agent.mcp_server --snapshot data/raw/01-Nov-2026`. The
+evaluation calls the tools directly, not through MCP.
 
 ### Evaluation Questions
 
